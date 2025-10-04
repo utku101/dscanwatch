@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 
 APP_TITLE = "EVE D-Scan (Clipboard Auto)"
-INDEX_FILES = "ship_index.json"
+INDEX_FILES = ["ship_index.json"]
 INPUT_HINT = "Clipboard-driven: copy your D-Scan text (Ctrl+C) anywhere; it will appear here."
 RESULTS_HINT_G = "By Group results will appear here."
 RESULTS_HINT_T = "By Type results will appear here."
@@ -164,5 +164,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
