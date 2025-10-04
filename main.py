@@ -93,7 +93,7 @@ class Main(QWidget):
 
         # Load ship index
         base = Path(__file__).resolve().parent
-        loaded, err = load_ship_index(base)
+        loaded, err = load_ship_index()
         if err:
             QMessageBox.critical(self, "Error", err)
             self.index = None
@@ -164,4 +164,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
