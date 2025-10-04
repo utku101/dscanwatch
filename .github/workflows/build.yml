@@ -3,30 +3,54 @@ name: Build exe
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
+env:
+  MAIN_PY: main.py
+  PYTHON_VERSION: '3.11'
 
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
+
+      - name: Show repo tree
+        run: |
+          echo "Top-level:" && dir
+          echo "Tree:" && pwsh -c "Get-ChildItem -Recurse -File | Select-Object FullName | Format-Table -AutoSize"
+
+      - name: Verify entry script exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${{ env.MAIN_PY }}")) {
+            Write-Error "Entry script '${{ env.MAIN_PY }}' not found. Update env.MAIN_PY."
+          }
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install build deps
-        run: pip install --upgrade pip && pip install pyinstaller PyQt5
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller PyQt5
 
       - name: Build exe
-        
-        run: pyinstaller --onefile --noconsole main.py
+        run: pyinstaller --onefile --noconsole --name dscanwatch "${{ env.MAIN_PY }}"
 
-      - name: Upload artifacts (exe + JSON)
+      - name: Copy JSON next to exe
+        shell: pwsh
+        run: |
+          if (Test-Path "ship_index.json") { Copy-Item ship_index.json dist/ }
+          if (Test-Path "ships_by_group.json") { Copy-Item ships_by_group.json dist/ }
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dscanwatch-build
           path: |
-            dist/eve_dscan_clipboard.exe
-            ship_index.json
+            dist/dscanwatch.exe
+            dist/ship_index.json
+            dist/ships_by_group.json
