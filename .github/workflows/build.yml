@@ -1,0 +1,32 @@
+name: Build exe
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build deps
+        run: pip install --upgrade pip && pip install pyinstaller PyQt5
+
+      - name: Build exe
+        # Buradaki .py dosya adını KENDİ ana dosya adınla değiştir.
+        run: pyinstaller --onefile --noconsole eve_dscan_clipboard.py
+
+      - name: Upload artifacts (exe + JSON)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dscanwatch-build
+          path: |
+            dist/eve_dscan_clipboard.exe
+            ship_index.json
