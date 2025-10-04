@@ -16,24 +16,32 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 
 APP_TITLE = "EVE D-Scan (Clipboard Auto)"
-INDEX_FILE = "ship_index.json"
+INDEX_FILES = "ship_index.json"
 INPUT_HINT = "Clipboard-driven: copy your D-Scan text (Ctrl+C) anywhere; it will appear here."
 RESULTS_HINT_G = "By Group results will appear here."
 RESULTS_HINT_T = "By Type results will appear here."
 
-def load_ship_index(base: Path):
-    p = base / INDEX_FILE
-    if not p.exists():
-        return None, f"ERROR: {INDEX_FILE} not found next to the script."
-    try:
-        with p.open("r", encoding="utf-8") as f:
-            raw = json.load(f)  # {typeName: groupName}
-        # Case-insensitive lookup; prefer longest names first to avoid partial collisions
-        norm = {k.lower(): (k, v) for k, v in raw.items()}
-        keys = sorted(norm.keys(), key=len, reverse=True)
-        return (norm, keys), None
-    except Exception as e:
-        return None, f"ERROR: failed to load {INDEX_FILE}: {e}"
+def app_dir() -> Path:
+    # running as bundled EXE?
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    # running from source
+    return Path(__file__).resolve().parent
+
+def load_ship_index():
+    base = app_dir()
+    tried = []
+    for name in INDEX_FILES:
+        p = base / name
+        tried.append(str(p))
+        if p.exists():
+            with p.open("r", encoding="utf-8") as f:
+                raw = json.load(f)
+            norm = {k.lower(): (k, v) for k, v in raw.items()}
+            keys = sorted(norm.keys(), key=len, reverse=True)
+            return (norm, keys), None
+    return None, "Index JSON not found.\nTried:\n" + "\n".join(tried)
+
 
 def analyze(text: str, norm_index, sorted_keys):
     """For each non-empty line: longest-first substring match to a known ship name."""
@@ -156,3 +164,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
